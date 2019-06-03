@@ -10,23 +10,34 @@ namespace IpShareServer.Controllers
 {
     public class CoordShareController : Controller
     {
-        public volatile static Dictionary<string, Vector3> ListIp = new Dictionary<string, Vector3>();
+        public volatile static Dictionary<string, Vector3> Measurments = new Dictionary<string, Vector3>();
+        public volatile static Dictionary<string, Vector3> Clock = new Dictionary<string, Vector3>();
 
         [HttpGet]
-        public IActionResult SaveMyCoords(String Name, float x, float y, float z)
+        public IActionResult getMeasurments(String Name, long x, long y, long z)
         {
-            if (ListIp.ContainsKey(Name))
-                ListIp[Name] = new Vector3(x, y, z);
+            if (Measurments.ContainsKey(Name))
+                Measurments[Name] = new Vector3(x, y, z);
             else
-                ListIp.Add(Name, new Vector3(x, y, z));
+                Measurments.Add(Name, new Vector3(x, y, z));
+            return Ok();
+        }
+
+        [HttpGet]
+        public IActionResult getTime(String Name, float x, float y, float z)
+        {
+            if (Clock.ContainsKey(Name))
+                Clock[Name] = new Vector3(x, y, z);
+            else
+                Clock.Add(Name, new Vector3(x, y, z));
             return Ok();
         }
 
         [HttpGet]
         public IActionResult GetFriendsCoords(String Name)
         {
-            if (ListIp.ContainsKey(Name))
-                return Content($"{ListIp[Name].X};{ListIp[Name].Y};{ListIp[Name].Z}");
+            if (Measurments.ContainsKey(Name))
+                return Content($"{Measurments[Name].X};{Measurments[Name].Y};{Measurments[Name].Z}");
             return BadRequest();
         }
     }
