@@ -163,7 +163,7 @@
         var scheme = document.location.protocol == "https:" ? "wss" : "ws";
         var port = document.location.port ? (":" + document.location.port) : "";
 
-        connectionUrl.value = scheme + "://" + document.location.hostname + port + "/WebSocketExperiment" + "/ws";
+        connectionUrl.value = scheme + "://" + document.location.hostname + port + "/IpShareServer" + "/ws";
         var clientGuid;
 
         function updateState() {
