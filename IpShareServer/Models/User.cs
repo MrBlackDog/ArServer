@@ -12,44 +12,44 @@ namespace IpShareServer.Models
 {
     public class User
     {
-        public Measurment measurments { get; set; }
-        public GNSSClock gnssClock { get; set; }
+        public List<Satellite> Satellites { get; set; }
+        public GNSSClock GnssClock { get; set; }
         public Vector3 Coords { get; set; }
-        public WebSocket webSocket;
+        public WebSocket WebSocket;
         public bool IsConnect = false;
-        private object locker = new object();
+        private object _locker = new object();
 
-        public User(WebSocket websocket)
+        public User(WebSocket webSocket)
         {
-            webSocket = websocket;
+            WebSocket = webSocket;
         }
 
-        private async void SendMessage(WebSocket socket, string Message)
+        private async void SendMessage(WebSocket socket, string message)
         {
             if (socket.State == WebSocketState.Open)
             {
-                await socket.SendAsync(new ArraySegment<byte>(Encoding.ASCII.GetBytes(Message)), WebSocketMessageType.Text, true, CancellationToken.None);
+                await socket.SendAsync(new ArraySegment<byte>(Encoding.ASCII.GetBytes(message)), WebSocketMessageType.Text, true, CancellationToken.None);
             }
         }
 
         public async Task Echo()
         {
-            while (webSocket.State == WebSocketState.Open)
+            while (WebSocket.State == WebSocketState.Open)
             {
-                var Text = GetMessage().Result;
-                lock (locker)
+                var text = GetMessage().Result;
+                lock (_locker)
                 {
                     IsConnect = true;
                 }
-                var Code = Text.Split(":")[0];
-                var Message = Text.Split(":")[1].Split(" ");
-                switch (Code)
+                var code = text.Split(":")[0];
+                var message = text.Split(":")[1].Split(" ");
+                switch (code)
                 {
-                    case "Measurments":                        
-                        ReceiveMeasurments(Message);
+                    case "Measurments":
+                        Task.Factory.StartNew(() => ReceiveMeasurments(message));
                         break;
                     case "GNSSClock":
-                        ReceiveGNSSClock(Message);
+                        Task.Factory.StartNew(() => ReceiveGNSSClock(message));
                         break;
                     case "Check":
                         break;
@@ -57,12 +57,12 @@ namespace IpShareServer.Models
                         break;
                 }
             }
-            await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed from server", CancellationToken.None);
+            await WebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed from server", CancellationToken.None);
         }
 
         public void ReceiveMeasurments(String[] message)
         {
-
+           
         }
 
         public void ReceiveGNSSClock(String[] message)
@@ -73,11 +73,10 @@ namespace IpShareServer.Models
         private async Task<string> GetMessage()
         {
             var buffer = new byte[1024 * 4];
-            var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-            var Text = (System.Text.Encoding.UTF8.GetString(buffer, 0, buffer.Length));
-            Text = Text.Replace("\0", "");
-            //Console.WriteLine($"GetMessage {guid} {Text}");
-            return Text;
+            var result = await WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+            var text = (Encoding.UTF8.GetString(buffer, 0, buffer.Length));
+            text = text.Replace("\0", "");
+            return text;
         }
     } 
 }

@@ -7,18 +7,15 @@ namespace IpShareServer.Models
 {
     public struct Measurment
     {
-
-        public int Svid;
         public int State;
         public int ConstellationType;
         public long ReceivedSvTimeNanos;
 
-        public Measurment(int svid, int constellationtype, int state, long receivedsvtimenanos)
+        public Measurment(int constellationType, int state, long receivedSvtimeNanos)
         {
-            Svid = svid;
-            ConstellationType = constellationtype;
+            ConstellationType = constellationType;
             State = state;
-            ReceivedSvTimeNanos = receivedsvtimenanos;
+            ReceivedSvTimeNanos = receivedSvtimeNanos;
         }
     }
 }

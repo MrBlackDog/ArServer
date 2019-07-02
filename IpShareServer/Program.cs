@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Threading.Tasks;
+using IpShareServer.Models;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -13,7 +14,7 @@ namespace IpShareServer
 {
     public class Program
     {
-        public static List<WebSocket> webSockets = new List<WebSocket>();
+        public static List<User> Users = new List<User>();
         public static void Main(string[] args)
         {
             CreateWebHostBuilder(args).Build().Run();

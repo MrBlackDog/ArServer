@@ -64,8 +64,9 @@ namespace IpShareServer
                     {
                         WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
                         Console.WriteLine($"New Connection {context.Connection.RemoteIpAddress}");
-                        await Echo(context, webSocket);
-
+                        var user = new Models.User(webSocket);
+                        Program.Users.Add(user);
+                        await user.Echo();
                     }
                     else
                     {
@@ -78,30 +79,7 @@ namespace IpShareServer
                     await next();
                 }
             });
-            /*app.UseMvc(routes =>
-            {
-                routes.MapRoute(
-                    name: "default",
-                    template: "{controller=Home}/{action=Index}/{id?}");
-            });*/
             app.UseMvc();
         }
-
-        private async Task Echo(HttpContext context, WebSocket webSocket)
-        {
-            var buffer = new byte[1024 * 4];
-            WebSocketReceiveResult wsresult = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer),
-            CancellationToken.None);
-            while (!wsresult.CloseStatus.HasValue)
-            {
-                await webSocket.SendAsync(new ArraySegment<byte>(buffer, 0, wsresult.Count), wsresult.MessageType,
-                wsresult.EndOfMessage, CancellationToken.None);
-                wsresult = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-            }
-            await webSocket.CloseAsync(wsresult.CloseStatus.Value, wsresult.CloseStatusDescription,
-            CancellationToken.None);
-        }
     }
-
-
 }
