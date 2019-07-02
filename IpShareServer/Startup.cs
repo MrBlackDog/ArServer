@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -49,7 +50,7 @@ namespace IpShareServer
                 app.UseHsts();
             }
 
-            //app.UseHttpsRedirection();
+            app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseCookiePolicy();
             app.UseWebSockets();
@@ -62,7 +63,9 @@ namespace IpShareServer
                     if (context.WebSockets.IsWebSocketRequest)
                     {
                         WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
-                        Console.WriteLine($"New Connection {context.Connection.RemoteIpAddress}");                       
+                        Console.WriteLine($"New Connection {context.Connection.RemoteIpAddress}");
+                        await Echo(context, webSocket);
+
                     }
                     else
                     {
@@ -83,5 +86,22 @@ namespace IpShareServer
             });*/
             app.UseMvc();
         }
+
+        private async Task Echo(HttpContext context, WebSocket webSocket)
+        {
+            var buffer = new byte[1024 * 4];
+            WebSocketReceiveResult wsresult = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer),
+            CancellationToken.None);
+            while (!wsresult.CloseStatus.HasValue)
+            {
+                await webSocket.SendAsync(new ArraySegment<byte>(buffer, 0, wsresult.Count), wsresult.MessageType,
+                wsresult.EndOfMessage, CancellationToken.None);
+                wsresult = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+            }
+            await webSocket.CloseAsync(wsresult.CloseStatus.Value, wsresult.CloseStatusDescription,
+            CancellationToken.None);
+        }
     }
+
+
 }
