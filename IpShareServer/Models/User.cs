@@ -42,13 +42,15 @@ namespace IpShareServer.Models
                     IsConnect = true;
                 }
                 var Code = Text.Split(":")[0];
-                var Message = Text.Split(":")[1].Split(" ");
+                
                 switch (Code)
                 {
-                    case "Measurments":                        
+                    case "Measurements":
+                        var Message = Text.Split(":")[1].Split(" ");
                         ReceiveMeasurments(Message);
                         break;
                     case "GNSSClock":
+                         Message = Text.Split(":")[1].Split(" ");
                         ReceiveGNSSClock(Message);
                         break;
                     case "Check":
@@ -62,12 +64,12 @@ namespace IpShareServer.Models
 
         public void ReceiveMeasurments(String[] message)
         {
-
+            Console.WriteLine(" Meas:" +  String.Concat(message));
         }
 
         public void ReceiveGNSSClock(String[] message)
         {
-
+            Console.WriteLine("Clock: " + String.Concat(message));
         }
 
         private async Task<string> GetMessage()
@@ -76,7 +78,7 @@ namespace IpShareServer.Models
             var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
             var Text = (System.Text.Encoding.UTF8.GetString(buffer, 0, buffer.Length));
             Text = Text.Replace("\0", "");
-            //Console.WriteLine($"GetMessage {guid} {Text}");
+           // Console.WriteLine($"GetMessage {Text}");
             return Text;
         }
     } 

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using IpShareServer.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -63,8 +64,9 @@ namespace IpShareServer
                     if (context.WebSockets.IsWebSocketRequest)
                     {
                         WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
+                        User user = new User(webSocket);
                         Console.WriteLine($"New Connection {context.Connection.RemoteIpAddress}");
-                        await Echo(context, webSocket);
+                        await user.Echo();
 
                     }
                     else
