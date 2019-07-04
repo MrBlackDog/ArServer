@@ -8,9 +8,9 @@ namespace IpShareServer.Models
     public struct Measurment
     {
         public int Svid;
+        public int State;
         public int ConstellationType;
         public double TimeOffsetNanos;
-        public int State;
         public long ReceivedSvTimeNanos;
         public long ReceivedSvTimeUncertaintyNanos;
         public double Cn0DbHz;
@@ -27,6 +27,7 @@ namespace IpShareServer.Models
         public double SnrInDb;
         public double AgcDb;
         public float CarrierFreqHz;
+
 
         public Measurment(int svid, int constellationType, double timeOffsetNanos, int state, long receivedSvtimeNanos, long receivedSvTimeUncertaintyNanos, double cn0DbHz, double pseudorangeRateMetersPerSecond,
             double pseudorangeRateUncertaintyMetersPerSecond, int accumulatedDeltaRangeState, double accumulatedDeltaRangeMeters, double accumulatedDeltaRangeUncertaintyMeters, float carrierFrequencyHz, long carrierCycles, double carrierPhase,
