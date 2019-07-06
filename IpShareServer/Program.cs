@@ -15,6 +15,7 @@ namespace IpShareServer
     public class Program
     {
         public static List<User> Users = new List<User>();
+        public static User MatLabUser;
         public static void Main(string[] args)
         {
             CreateWebHostBuilder(args).Build().Run();

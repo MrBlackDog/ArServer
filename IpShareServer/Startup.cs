@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using IpShareServer.Helpers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -64,9 +65,21 @@ namespace IpShareServer
                     {
                         WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
                         Console.WriteLine($"New Connection {context.Connection.RemoteIpAddress}");
-                        var user = new Models.User(webSocket);
-                        Program.Users.Add(user);
-                        await user.Echo();
+                        var message = WebSocketHelper.GetMessage(webSocket).Result;
+                        var messageMass = message.Split(":");
+                        if (messageMass[0] == "State")
+                        {
+                            var user = new Models.User(webSocket);
+                            if (messageMass[1] == "Matlab")
+                            {
+                                Program.MatLabUser = user;
+                            }
+                            else
+                            {
+                                Program.Users.Add(user);
+                            }
+                            await user.Echo();
+                        }
                     }
                     else
                     {

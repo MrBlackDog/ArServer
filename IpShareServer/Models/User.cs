@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IpShareServer.Helpers;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,7 +38,7 @@ namespace IpShareServer.Models
         {
             while (WebSocket.State == WebSocketState.Open)
             {
-                var text = GetMessage().Result;
+                var text =  WebSocketHelper.GetMessage(WebSocket).Result;
                 lock (_locker)
                 {
                     IsConnect = true;
@@ -47,19 +48,14 @@ namespace IpShareServer.Models
                 switch (code)
                 {
                     case "Measurements":
-                        // Task.Factory.StartNew(() => ReceiveMeasurments(message));
-                        ReceiveMeasurments(message);                       
+                        Task.Factory.StartNew(() => ReceiveMeasurments(message));
                         break;
                     case "GNSSClock":                       
-                        //Task.Factory.StartNew(() => ReceiveGNSSClock(message));
-                        ReceiveGNSSClock(message);                       
+                        Task.Factory.StartNew(() => ReceiveGNSSClock(message));
                         break;
                     case "Check":
                         break;
                     case "Close":
-                        break;
-                    case "State":
-                        GetState(message);
                         break;
                 }
             }
@@ -68,9 +64,8 @@ namespace IpShareServer.Models
 
         public void ReceiveMeasurments(String[] message)
         {
-            foreach (User user in Program.Users)
-                if (user.state == "Matlab")
-                    SendMessage(user.WebSocket, user.state + " " + string.Join(" ", message));
+            var MatLabUser = Program.MatLabUser;
+            SendMessage(MatLabUser.WebSocket, "Matlab" + " " + string.Join(" ", message));
             Console.Write("Meas: ");
             foreach (String mess in message)
                 Console.Write(mess + " ");
@@ -84,21 +79,6 @@ namespace IpShareServer.Models
                 Console.Write(mess + " ");
             Console.WriteLine();
         }
-
-        public void GetState(String[] message)
-        {
-            Console.Write("State:" + message[0]);
-            this.state = message[0];
-        }
-
-        private async Task<string> GetMessage()
-        {
-            var buffer = new byte[1024 * 4];
-            var result = await WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-            var text = (Encoding.UTF8.GetString(buffer, 0, buffer.Length));
-            text = text.Replace("\0", "");
-            // Console.WriteLine(text);
-            return text;
-        }
+   
     }
 }

@@ -71,25 +71,8 @@ sendButton.onclick = function () {
     if (!socket || socket.readyState != WebSocket.OPEN) {
         alert("socket not connected");
     }
-    var data = {
-        Ball: {
-            Color: {
-                Red: 255,
-                Gren: 0,
-                Blue: 0
-            },
-            FromX: 0,
-            FromY: 0,
-            FromZ: 0,
-            TangentX: 0,
-            TangentY: 0,
-            TangentZ: 0,
-            StartTime: new Date(5000)
-        },
-        Client: clientGuid
-    };
-    var json = JSON.stringify(data);
-    socket.send(json);
+    var data = $("#sendMessage").val()
+    socket.send(data);
     //commsLog.innerHTML += '<tr>' +
     //    '<td class="commslog-client">Client</td>' +
     //    '<td class="commslog-server">Server</td>' +
