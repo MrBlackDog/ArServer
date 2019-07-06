@@ -68,7 +68,9 @@ namespace IpShareServer.Models
 
         public void ReceiveMeasurments(String[] message)
         {
-            
+            foreach (User user in Program.Users)
+                if (user.state == "Matlab")
+                    SendMessage(user.WebSocket, user.state + " " + string.Join(" ", message));
             Console.Write("Meas: ");
             foreach (String mess in message)
                 Console.Write(mess + " ");
@@ -86,6 +88,7 @@ namespace IpShareServer.Models
         public void GetState(String[] message)
         {
             Console.Write("State:" + message[0]);
+            this.state = message[0];
         }
 
         private async Task<string> GetMessage()
@@ -94,7 +97,7 @@ namespace IpShareServer.Models
             var result = await WebSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
             var text = (Encoding.UTF8.GetString(buffer, 0, buffer.Length));
             text = text.Replace("\0", "");
-           // Console.WriteLine(text);
+            // Console.WriteLine(text);
             return text;
         }
     }
