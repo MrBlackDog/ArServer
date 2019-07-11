@@ -64,12 +64,15 @@ namespace IpShareServer.Models
 
         public void ReceiveMeasurments(String[] message)
         {
-            var MatLabUser = Program.MatLabUser;
-            SendMessage(MatLabUser.WebSocket, "Matlab" + " " + string.Join(" ", message));
-            Console.Write("Meas: ");
-            foreach (String mess in message)
-                Console.Write(mess + " ");
-            Console.WriteLine();
+            if (Program.MatLabUser != null)
+            {
+                var MatLabUser = Program.MatLabUser;
+                SendMessage(MatLabUser.WebSocket, "Matlab" + " " + string.Join(" ", message));
+                Console.Write("Meas: ");
+                foreach (String mess in message)
+                    Console.Write(mess + " ");
+                Console.WriteLine();
+            }
         }
 
         public void ReceiveGNSSClock(String[] message)

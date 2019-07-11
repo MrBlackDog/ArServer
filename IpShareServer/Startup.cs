@@ -67,9 +67,9 @@ namespace IpShareServer
                         Console.WriteLine($"New Connection {context.Connection.RemoteIpAddress}");
                         var message = WebSocketHelper.GetMessage(webSocket).Result;
                         var messageMass = message.Split(":");
+                        var user = new Models.User(webSocket);
                         if (messageMass[0] == "State")
                         {
-                            var user = new Models.User(webSocket);
                             if (messageMass[1] == "Matlab")
                             {
                                 Program.MatLabUser = user;
@@ -80,7 +80,12 @@ namespace IpShareServer
                             }
                             await user.Echo();
                         }
+                        else
+                        {
+                            await user.Echo();
+                        }
                     }
+
                     else
                     {
                         context.Response.StatusCode = 400;
