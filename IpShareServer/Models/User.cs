@@ -13,7 +13,7 @@ namespace IpShareServer.Models
 {
     public class User
     {
-        public List<Satellite> Satellites { get; set; }
+      //  public List<Satellite> Satellites { get; set; }
         public GNSSClock GnssClock { get; set; }
         public Vector3 Coords { get; set; }
         public WebSocket WebSocket;
@@ -53,6 +53,9 @@ namespace IpShareServer.Models
                     case "GNSSClock":                       
                         Task.Factory.StartNew(() => ReceiveGNSSClock(message));
                         break;
+                    case "GetEphemerides":
+                        Task.Factory.StartNew(() => returnEphemerides());
+                        break;
                     case "Check":
                         break;
                     case "Close":
@@ -82,6 +85,13 @@ namespace IpShareServer.Models
                 Console.Write(mess + " ");
             Console.WriteLine();
         }
-   
+        public void returnEphemerides()
+        {
+            if (Program.MatLabUser != null)
+            {
+                var MatLabUser = Program.MatLabUser;
+                SendMessage(MatLabUser.WebSocket, "Matlab" + " " + string.Join(" ", Program.Ephemerides));
+            }
+        }
     }
 }

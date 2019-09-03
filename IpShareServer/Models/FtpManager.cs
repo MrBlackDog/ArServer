@@ -6,12 +6,12 @@ using System.Text;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace FirstTest
+namespace IpShareServer.Models
 {
-    static class FtpManager
+    public  class FtpManager
     {
         const int CatalogBufferSize = 64000;
-        const int FileBufferSize = 1880000;
+        const int FileBufferSize = 32 * 8 * 1000000;
 
         public static List<string> GetEpfemerids(String Catalog)
         {
@@ -25,7 +25,7 @@ namespace FirstTest
 
             //Если файл по каким то причинам сформирован неполностью
             //Повторяем попытку
-            if (File.Split('\n').Length < 33 * 8)
+            if (File.Split('\n').Length % 8!= 0)
                 return GetEpfemerids(Catalog);
             return File.GetSatteliteStringMass(256, 8);
         }
@@ -42,8 +42,8 @@ namespace FirstTest
 
             //Если файл по каким то причинам сформирован неполностью
             //Повторяем попытку
-            // if (File.Split('\n').Length < 33 * 8)
-            //   return GetEpfemerids(Catalog);
+             if (File.Split('\n').Length < 32 * 8)
+               return GetEpfemerids(Catalog);
             return File.GetHeaderStringMass(7, 8);
         }
 
@@ -66,5 +66,7 @@ namespace FirstTest
             }
             return Encoding.UTF8.GetString(Message);
         }
+
+
     }
 }

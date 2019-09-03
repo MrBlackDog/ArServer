@@ -38,7 +38,7 @@ namespace IpShareServer
                 options.CheckConsentNeeded = context => true;
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
-            services.AddHostedService< GetEphemerides>();
+            services.AddHostedService <GetEphemerides>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
@@ -78,6 +78,10 @@ namespace IpShareServer
                             {
                                 Program.MatLabUser = user;
                             }
+                       /*     else if(messageMass[1] == "ESP8266")
+                            {
+                                
+                            }*/
                             else
                             {
                                 Program.Users.Add(user);
