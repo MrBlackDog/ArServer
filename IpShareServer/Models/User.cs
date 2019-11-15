@@ -20,10 +20,12 @@ namespace IpShareServer.Models
         public bool IsConnect = false;
         private object _locker = new object();
         public String state;
+        public Guid _guid;
 
-        public User(WebSocket webSocket)
+        public User(WebSocket webSocket,Guid guid)
         {
             WebSocket = webSocket;
+            _guid = guid;
         }
 
         private async void SendMessage(WebSocket socket, string message)
@@ -48,13 +50,19 @@ namespace IpShareServer.Models
                 switch (code)
                 {
                     case "Measurements":
-                        Task.Factory.StartNew(() => ReceiveMeasurments(message));
+                        // Task.Factory.StartNew(() => ReceiveMeasurments(message));
+                        ReceiveMeasurments(message);
                         break;
-                    case "GNSSClock":                       
-                        Task.Factory.StartNew(() => ReceiveGNSSClock(message));
+                    case "GNSSClock":
+                        // Task.Factory.StartNew(() => ReceiveGNSSClock(message));
+                        ReceiveGNSSClock(message);
                         break;
                     case "GetEphemerides":
-                        Task.Factory.StartNew(() => returnEphemerides());
+                        //  Task.Factory.StartNew(() => returnEphemerides());
+                        returnEphemerides();
+                        break;
+                    case "Location":
+                        ReceiveLocation(message);
                         break;
                     case "Check":
                         break;
@@ -70,16 +78,32 @@ namespace IpShareServer.Models
             if (Program.MatLabUser != null)
             {
                 var MatLabUser = Program.MatLabUser;
-                SendMessage(MatLabUser.WebSocket, "Matlab" + " " + string.Join(" ", message));
-                Console.Write("Meas: ");
-                foreach (String mess in message)
-                    Console.Write(mess + " ");
-                Console.WriteLine();
+                SendMessage(MatLabUser.WebSocket, "Measurements" + " " + string.Join(" ", message));
             }
+            Console.Write("Meas: ");
+            foreach (String mess in message)
+                Console.Write(mess + " ");
+            Console.WriteLine();
         }
-
+        public void ReceiveLocation(String[] message)
+        {
+            if (Program.MatLabUser != null)
+            {
+                var MatLabUser = Program.MatLabUser;
+                SendMessage(MatLabUser.WebSocket, "Measurements" + " " + string.Join(" ", message));
+            }
+            Console.Write("Location: ");
+            foreach (String mess in message)
+                Console.Write(mess + " ");
+            Console.WriteLine();
+        }
         public void ReceiveGNSSClock(String[] message)
         {
+            if (Program.MatLabUser != null)
+            {
+                var MatLabUser = Program.MatLabUser;
+                SendMessage(MatLabUser.WebSocket, "GNSS Clock" + " " + string.Join(" ", message));
+            }
             Console.Write("Clock: ");
             foreach (String mess in message)
                 Console.Write(mess + " ");

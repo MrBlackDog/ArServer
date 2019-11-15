@@ -71,12 +71,13 @@ namespace IpShareServer
                         Console.WriteLine($"New Connection {context.Connection.RemoteIpAddress}");
                         var message = WebSocketHelper.GetMessage(webSocket).Result;
                         var messageMass = message.Split(":");
-                        var user = new Models.User(webSocket);
+                        var user = new Models.User(webSocket,  Guid.NewGuid());
                         if (messageMass[0] == "State")
                         {
                             if (messageMass[1] == "Matlab")
                             {
                                 Program.MatLabUser = user;
+                                Console.WriteLine($"New Connected MatlabUser {context.Connection.RemoteIpAddress} " + user._guid);
                             }
                        /*     else if(messageMass[1] == "ESP8266")
                             {
@@ -85,6 +86,8 @@ namespace IpShareServer
                             else
                             {
                                 Program.Users.Add(user);
+                                Console.WriteLine($"New Connected Phone {context.Connection.RemoteIpAddress} " + user._guid +"  " + messageMass[2]);
+                               //Console.WriteLine($"New Connected Phone {context.Connection.RemoteIpAddress} " + user._guid);
                             }
                             await user.Echo();
                         }

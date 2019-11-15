@@ -128,18 +128,18 @@ namespace IpShareServer
                     switch (groupBya.Count())
                     {
                         case 1:
-                            finish.Add(spSat.GetSputnik(item.number, item.data, item.efemeridInfo));
+                            finish.Add(spSat.GetSputnik(item.number, item.data, item.ephemerisInfo));
                             break;
                         case 2:
                             if (i == 1)
                             {
-                                finish.Add(spSat.GetSputnik(item.number, item.data, item.efemeridInfo));
+                                finish.Add(spSat.GetSputnik(item.number, item.data, item.ephemerisInfo));
                             }
                             break;
                         case 3:
                             if (i == 2)
                             {
-                                finish.Add(spSat.GetSputnik(item.number, item.data, item.efemeridInfo));
+                                finish.Add(spSat.GetSputnik(item.number, item.data, item.ephemerisInfo));
             
                             }
                             break;

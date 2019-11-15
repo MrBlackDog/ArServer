@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 
 namespace IpShareServer.Models
 {
-    class SatteliteList : List<Satellite>
+    class SatelliteList : List<Satellite>
     {
-        public SatteliteList(String catalog)
+        public SatelliteList(String catalog)
         {
             var SattelitesInfo = FtpManager.GetEpfemerids(catalog);
             var HeaderInfo = FtpManager.GetHeader(catalog);

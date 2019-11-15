@@ -42,7 +42,7 @@ namespace IpShareServer
             foreach (var item in endList)
             {
                 Program.Ephemerides = Program.Ephemerides + item.number.ToString() + " " + item.data.ToString() + " " + '\n'
-                    + item.efemeridInfo + '\n';
+                    + item.ephemerisInfo + '\n';
             }
             Console.WriteLine(Program.Ephemerides);
         }
