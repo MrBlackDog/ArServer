@@ -167,6 +167,10 @@ namespace IpShareServer
             var finish = GropBay_List(satelite,0);
             var finish2 = GropBay_List(satelite_2,1);
             var union = finish.Union(finish2,comparer).OrderBy(item=>item.number);
+            foreach(Sputnik sputnik in union)
+            {
+                sputnik.CalculatePosition(sputnik._ephemeris.Toe + 60);
+            }
             Console.WriteLine($"Количество спутников :{union.Count()}");
             return union;
         }
