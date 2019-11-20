@@ -74,6 +74,8 @@ namespace IpShareServer.ephemerids
             Crc = Double.Parse(xd2 [16]);
             omega = Double.Parse(xd2[17]);
             OMEGA_DOT = Double.Parse(xd2[18]);
+            i0_dot = Double.Parse(xd2[19]);
+
         }
     }
 }

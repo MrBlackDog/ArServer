@@ -59,6 +59,7 @@ namespace IpShareServer
             Xk = Xshtk * Math.Cos(Omegak) - Yshtk * Math.Sin(Omegak) * Math.Cos(Ik);
             Yk = Xshtk * Math.Sin(Omegak) + Yshtk * Math.Cos(Omegak) * Math.Cos(Ik);
             Zk = Yshtk * Math.Cos(Ik);
+            Console.WriteLine("Old method:" + this.number);
             Console.WriteLine(Xk + " " + Yk + " " + Zk);
         }
         public double Kepler(double Mk, double En)
@@ -111,8 +112,33 @@ namespace IpShareServer
             var du = _ephemeris.Cus * Math.Sin(2*phi) + _ephemeris.Cuc * Math.Cos(2*phi);
             var dr = _ephemeris.Crs * Math.Sin(2*phi) + _ephemeris.Crc * Math.Cos(2*phi);       
             var di = _ephemeris.Cis * Math.Sin(2*phi) + _ephemeris.Cic * Math.Cos(2*phi);
-        
-            var du_dot = 2 *(_ephemeris.Cus * Math.Cos(2*phi) -  _ephemeris.Cuc * Math.Cos(2*phi))
+
+            var du_dot = 2 * (_ephemeris.Cus * Math.Cos(2 * phi) - _ephemeris.Cuc * Math.Sin(2 * phi));
+            var dr_dot = 2 * (_ephemeris.Crs * Math.Cos(2 * phi) - _ephemeris.Crc * Math.Sin(2 * phi));
+            var di_dot = 2 * (_ephemeris.Cis * Math.Cos(2 * phi) - _ephemeris.Cic * Math.Sin(2 * phi));
+
+            var u = phi + du;
+            var r = _ephemeris.A0 * (1 - _ephemeris.e * Math.Cos(E)) + dr;
+            var i = _ephemeris.i0 + di + _ephemeris.i0_dot * t;
+
+            var u_dot = phi_dot + du_dot;
+            var r_dot = _ephemeris.A0 * _ephemeris.e * Math.Sin(E) * E_dot + dr_dot;
+            var i_dot = _ephemeris.i0_dot + di_dot;
+
+            var xp = r * Math.Cos(u);
+            var yp = r * Math.Sin(u);
+
+            var xp_dot = r_dot * Math.Cos(u) - r * Math.Sin(u) * u_dot;
+            var yp_dot = r_dot * Math.Sin(u) - r * Math.Cos(u) * u_dot;
+
+            var omg = _ephemeris.OMEGA + (_ephemeris.OMEGA_DOT - Ephemeris.odote) * t - Ephemeris.odote * _ephemeris.Toe;
+            var omg_dot = _ephemeris.OMEGA_DOT - Ephemeris.odote;
+
+            Xk = xp * Math.Cos(omg) - yp * Math.Cos(i) * Math.Sin(omg);
+            Yk = xp * Math.Sin(omg) + yp * Math.Cos(i) * Math.Cos(omg);
+            Zk = yp * Math.Sin(i);
+            Console.WriteLine("New method:" + this.number);
+            Console.WriteLine(Xk + " " + Yk + " " + Zk);
         }
 
         private double Kepler2(double m, double e)

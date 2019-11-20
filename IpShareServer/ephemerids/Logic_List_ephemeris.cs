@@ -169,6 +169,7 @@ namespace IpShareServer
             var union = finish.Union(finish2,comparer).OrderBy(item=>item.number);
             foreach(Sputnik sputnik in union)
             {
+                sputnik.CalculatePositionNew(sputnik._ephemeris.Toe + 60);
                 sputnik.CalculatePosition(sputnik._ephemeris.Toe + 60);
             }
             Console.WriteLine($"Количество спутников :{union.Count()}");
