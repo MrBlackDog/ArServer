@@ -13,12 +13,15 @@ namespace IpShareServer.Models
 {
     public class User
     {
-        public double GPStime = 0;
-        public long TrxNanos = 0;
-        public Vector3 CurrnetPos = new Vector3();
-        public Measurement[] measurements;
+        public delegate bool CallBack(int hwnd, int lParam);
+
+        public String CompliteMessageString(int hwnd, int lParam)
+        {
+            return (" ");
+        }
         public class Measurement
         {
+            public const double С = 2.99792458e8;
             public int Svid;
             public long ReceivedSvTimeNanos;
             public long ReceivedSvTimeUncertaintyNanos;
@@ -27,32 +30,73 @@ namespace IpShareServer.Models
             {
                 this.Svid = int.Parse(str[0]);
                 this.ReceivedSvTimeNanos = long.Parse(str[1]);
+                this.ReceivedSvTimeUncertaintyNanos = long.Parse(str[2]);
+
             }
             public Measurement()
             { }
+
         }
 
         public class Clock
         {
+            public const int WeekSec = 604800;
+            public long TimeNanos;
+            public double TimeUncertaintyNanos;
+            public long FullBiasNanos;
+            public long BiasNanos;
+            public double BiasUncertaintyNanos;
+            public double GPStime = 0;
+            public long TrxNanos = 0;
+            public double WeekNumberNanos;
             public Clock(String[] str)
             {
-
+                TimeNanos = long.Parse(str[0]);
+                TimeUncertaintyNanos = Double.Parse(str[1]);
+                FullBiasNanos = long.Parse(str[2]);
+                BiasNanos = long.Parse(str[3]);
+                BiasUncertaintyNanos = Double.Parse(str[4]);
+                GPStime = (TimeNanos + TimeUncertaintyNanos) - (FullBiasNanos - BiasNanos);
+                WeekNumberNanos = Math.Floor(-1 * FullBiasNanos * 1e-9 / WeekSec);
+                TrxNanos = TimeNanos - (FullBiasNanos - BiasNanos) - Convert.ToInt64(WeekNumberNanos);
             }
         }
         //  public List<Satellite> Satellites { get; set; }
-        public GNSSClock GnssClock { get; set; }
+        //public GNSSClock GnssClock { get; set; }
+        public Vector3 CurrnetPos = new Vector3();
+        public Measurement[] measurements;
+        public Clock clock;
 
-        public Vector3 Coords { get; set; }
         public WebSocket WebSocket;
         public bool IsConnect = false;
         private object _locker = new object();
         public String state;
         public Guid _guid;
-
+        public String MessageString;
         public User(WebSocket webSocket, Guid guid)
         {
             WebSocket = webSocket;
             _guid = guid;
+        }
+
+        public string LlaToECEF_String(double lat, double lon, double alt)
+        {
+            double DEGREES_TO_RADIANS = Math.PI / 180;
+            double clat = Math.Cos(lat * DEGREES_TO_RADIANS);
+            double slat = Math.Sin(lat * DEGREES_TO_RADIANS);
+            double clon = Math.Cos(lon * DEGREES_TO_RADIANS);
+            double slon = Math.Sin(lon * DEGREES_TO_RADIANS);
+
+            double WGS84_A = 6378137;
+            double WGS84_B = 6356752.314140;
+            double WGS84_E = Math.Sqrt(1 - (Math.Pow(WGS84_B, 2) / Math.Pow(WGS84_A, 2)));
+            double N = WGS84_A / Math.Sqrt(1.0 - WGS84_E * WGS84_E * slat * slat);
+
+            double x = (N + alt) * clat * clon;
+            double y = (N + alt) * clat * slon;
+            double z = (N * (1.0 - WGS84_E * WGS84_E) + alt) * slat;
+            MessageString = x.ToString() + " " + y.ToString() + " " + z.ToString();
+            return (x.ToString() + " " + y.ToString() + " " + z.ToString());
         }
         public async Task Echo()
         {
@@ -108,6 +152,7 @@ namespace IpShareServer.Models
         public void ReceiveGNSSClock(String[] message)
         {
             measurements = new Measurement[32];
+            clock = new Clock(message);
             if (Program.MatLabUser != null)
             {
                 var MatLabUser = Program.MatLabUser;

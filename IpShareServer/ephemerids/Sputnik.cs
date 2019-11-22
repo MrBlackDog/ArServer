@@ -25,7 +25,7 @@ namespace IpShareServer
             this.data = data;
             this.ephemerisInfo = ephemerisInfo;
             this._ephemeris = new Ephemeris(ephemerisInfo);
-            //CalculatePosition(_ephemeris.Toe + 60);
+            //CalculatePositionNew(_ephemeris.Toe + 60);
         }
         public Sputnik()
         {
@@ -59,38 +59,16 @@ namespace IpShareServer
             Xk = Xshtk * Math.Cos(Omegak) - Yshtk * Math.Sin(Omegak) * Math.Cos(Ik);
             Yk = Xshtk * Math.Sin(Omegak) + Yshtk * Math.Cos(Omegak) * Math.Cos(Ik);
             Zk = Yshtk * Math.Cos(Ik);
-            Console.WriteLine("Old method:" + this.number);
+            Console.WriteLine("Old method:" + this.number + " " +this.data);
             Console.WriteLine(Xk + " " + Yk + " " + Zk);
         }
-        public double Kepler(double Mk, double En)
-        {
-            /* int m = 0;
-             double[] E1 = new double[100];
-             E1[1] = 0;
-             while (true)
-             {
-                 E1[m + 1] = Mk + En * Math.Sin(E1[m]);
-                 if (Math.Abs(E1[m + 1] - E1[m]) < 1e-8)
-                     break;
-                 m = m + 1;
-             }
-             return E1[m];*/
-            double Ek = 0;
-            double Ek0 = Mk;
-            Ek = Mk + En * Math.Sin(Ek);
-            while (Math.Abs(Ek - Ek0) > 1e8)
-            {
-                Ek0 = Ek;
-                Ek = Mk + En * Math.Sin(Ek0);
-            }
-            return Ek;
-        }
+
         public void CalculatePositionNew(double tsat)
         {
-            var n0 = Math.Sqrt(Ephemeris.GM / (Math.Pow(_ephemeris.A0, 3)));//верно
+            var n0 = Math.Sqrt(Ephemeris.GM / (Math.Pow(_ephemeris.A0, 3)));
             var t = tsat - _ephemeris.Toe;
-            var n = n0 + _ephemeris.delta_n;//верно
-            var m = _ephemeris.M0 + n * t;//верно
+            var n = n0 + _ephemeris.delta_n;
+            var m = _ephemeris.M0 + n * t;
 
             var m_dot = n;
 
@@ -100,8 +78,8 @@ namespace IpShareServer
 
             var E_dot = m_dot / (1 - _ephemeris.e * Math.Cos(E));
 
-            var v = Math.Atan2(Math.Sqrt(1 - Math.Pow(_ephemeris.e, 2))
-                * Math.Sin(E), Math.Cos(E) - _ephemeris.e);
+            var v = Math.Atan2((Math.Sqrt(1 - Math.Pow(_ephemeris.e, 2))
+                * Math.Sin(E)), Math.Cos(E) - _ephemeris.e);
 
             var v_dot = Math.Sin(E) * E_dot * (1 + _ephemeris.e * Math.Cos(v))/
                 (Math.Sin(v) * (1 - _ephemeris.e * Math.Cos(v)));
@@ -137,15 +115,37 @@ namespace IpShareServer
             Xk = xp * Math.Cos(omg) - yp * Math.Cos(i) * Math.Sin(omg);
             Yk = xp * Math.Sin(omg) + yp * Math.Cos(i) * Math.Cos(omg);
             Zk = yp * Math.Sin(i);
-            Console.WriteLine("New method:" + this.number);
+            Console.WriteLine("New method:" + this.number + " " + this.data);
             Console.WriteLine(Xk + " " + Yk + " " + Zk);
         }
-
+        public double Kepler(double Mk, double En)
+        {
+            /* int m = 0;
+             double[] E1 = new double[100];
+             E1[1] = 0;
+             while (true)
+             {
+                 E1[m + 1] = Mk + En * Math.Sin(E1[m]);
+                 if (Math.Abs(E1[m + 1] - E1[m]) < 1e-8)
+                     break;
+                 m = m + 1;
+             }
+             return E1[m];*/
+            double Ek = 0;
+            double Ek0 = Mk;
+            Ek = Mk + En * Math.Sin(Ek);
+            while (Math.Abs(Ek - Ek0) > 1e8)
+            {
+                Ek0 = Ek;
+                Ek = Mk + En * Math.Sin(Ek0);
+            }
+            return Ek;
+        }
         private double Kepler2(double m, double e)
         {
             double E = 0;
             double E_new;
-            if ((-1 * Math.PI < m) && (m < 0) || (m > Math.PI))
+            if ( ((-1 * Math.PI < m) && (m < 0)) || (m > Math.PI))
                 E = m - e;
             else
                 E = m + e;

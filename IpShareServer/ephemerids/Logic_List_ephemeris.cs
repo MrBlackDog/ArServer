@@ -48,20 +48,24 @@ namespace IpShareServer
         }
         static public DateTime Get_Data(string[] nextStr)
         {
-            int chas = 0;
-            int god = Convert.ToInt32(nextStr[1]) + 2000;
-            int mesyac = Convert.ToInt32(nextStr[2]);
+            int hour = 0;
+            int year = Convert.ToInt32(nextStr[1]) + 2000;
+            int month = Convert.ToInt32(nextStr[2]);
 
-            int den = Convert.ToInt32(nextStr[3]);
+            int day = Convert.ToInt32(nextStr[3]);
             int minute = Convert.ToInt32(nextStr[5]);
+          //  var rawsecond = nextStr[6].Remove(nextStr[6].Length - 19 * 2, nextStr[6].Length);
+          //  var second = rawsecond.Split(".")[0];
+           // int millisecond = Convert.ToInt32(nextStr[6].Remove(nextStr[6].Length - 19 * 2, nextStr[6].Length).Split(".")[1]);
             if (minute == 59)
             {
-                chas = Convert.ToInt32(nextStr[4]) + 1;
+                hour = Convert.ToInt32(nextStr[4]) + 1;
                 minute = 0;
             }
             else
-            { chas = Convert.ToInt32(nextStr[4]); }
-            var data = new DateTime(god, mesyac, den, chas, minute, 0);
+            { hour = Convert.ToInt32(nextStr[4]); }
+
+            var data = new DateTime(year, month, day, hour, minute, 0, 0);
             return data;
         }
         static public List<Sputnik> CreateFirst_SateliteList(string[] Str)
@@ -73,6 +77,7 @@ namespace IpShareServer
             string infor = "";
             for (int j = 0; j < Str.Length; j++)
             {
+                //тут добавить расчет секунд.
                 var newStr = Str[j].Split(' ');
                 if (newStr.Length > 1)
                 {
@@ -167,11 +172,11 @@ namespace IpShareServer
             var finish = GropBay_List(satelite,0);
             var finish2 = GropBay_List(satelite_2,1);
             var union = finish.Union(finish2,comparer).OrderBy(item=>item.number);
-            foreach(Sputnik sputnik in union)
+           /* foreach(Sputnik sputnik in union)
             {
                 sputnik.CalculatePositionNew(sputnik._ephemeris.Toe + 60);
                 sputnik.CalculatePosition(sputnik._ephemeris.Toe + 60);
-            }
+            }*/
             Console.WriteLine($"Количество спутников :{union.Count()}");
             return union;
         }

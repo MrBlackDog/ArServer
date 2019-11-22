@@ -45,6 +45,11 @@ namespace IpShareServer
                     + item.ephemerisInfo + '\n';
             }
             Console.WriteLine(Program.Ephemerides);
+            foreach (Sputnik sputnik in endList)
+            {
+                sputnik.CalculatePositionNew(sputnik._ephemeris.Toe + 60);
+                sputnik.CalculatePosition(sputnik._ephemeris.Toe + 60);
+            }
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
