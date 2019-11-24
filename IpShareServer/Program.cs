@@ -15,7 +15,9 @@ namespace IpShareServer
     public class Program
     {
         public static List<User> Users = new List<User>();
-        public static User MatLabUser;
+        public static List<User> MatlabUser = new List<User>();
+        public static User MainMatlabUser;
+        
         public static string Ephemerides;
         public static void Main(string[] args)
         {

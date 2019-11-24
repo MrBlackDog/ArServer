@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Numerics;
@@ -13,6 +14,48 @@ namespace IpShareServer.Models
 {
     public class User
     {
+        public WebSocket WebSocket;
+        public bool IsConnect = false;
+        private object _locker = new object();
+        public string _model;
+        public Guid _guid;
+        public String state;
+
+        public User(WebSocket webSocket, Guid guid,string model)
+        {
+            WebSocket = webSocket;
+            _guid = guid;
+            _model = model;
+        }
+        public User(WebSocket webSocket, Guid guid)
+        {
+            WebSocket = webSocket;
+            _guid = guid;
+        }
+        private Timer _timer;
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            _timer = new Timer(DoWork,null,TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(1000));
+            MessageString = "";
+            return Task.CompletedTask;
+        }
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
+        }
+        public void Dispose()
+        { }
+        private void DoWork(object state)
+        {
+            //var MatLabUser = Program.MatLabUser.;
+            //SendMessage(MatLabUser.WebSocket, MessageString);
+            Console.WriteLine();
+            Console.WriteLine("Sendind message to Server");
+            Console.WriteLine(); 
+        }
+
+        Stopwatch stopWatch = new Stopwatch();
+
         public delegate bool CallBack(int hwnd, int lParam);
 
         public String CompliteMessageString(int hwnd, int lParam)
@@ -23,42 +66,47 @@ namespace IpShareServer.Models
         {
             public const double С = 2.99792458e8;
             public int Svid;
+            public long TimeOffsetNanos;
             public long ReceivedSvTimeNanos;
             public long ReceivedSvTimeUncertaintyNanos;
-            public long PseudoRange;
             public Measurement(String[] str)
             {
                 this.Svid = int.Parse(str[0]);
-                this.ReceivedSvTimeNanos = long.Parse(str[1]);
-                this.ReceivedSvTimeUncertaintyNanos = long.Parse(str[2]);
-
+                this.TimeOffsetNanos = long.Parse(str[1]);
+                this.ReceivedSvTimeNanos = long.Parse(str[2]);
+                this.ReceivedSvTimeUncertaintyNanos = long.Parse(str[3]);
             }
             public Measurement()
             { }
-
         }
-
         public class Clock
         {
             public const int WeekSec = 604800;
             public long TimeNanos;
             public double TimeUncertaintyNanos;
             public long FullBiasNanos;
-            public long BiasNanos;
+            public Double BiasNanos;
             public double BiasUncertaintyNanos;
             public double GPStime = 0;
             public long TrxNanos = 0;
             public double WeekNumberNanos;
+            
             public Clock(String[] str)
             {
+                for (int i = 0; i < str.Length; i++)
+                    if (string.IsNullOrEmpty(str[i]))
+                    {
+                        str[i] = "0";
+                    }
                 TimeNanos = long.Parse(str[0]);
-                TimeUncertaintyNanos = Double.Parse(str[1]);
-                FullBiasNanos = long.Parse(str[2]);
-                BiasNanos = long.Parse(str[3]);
-                BiasUncertaintyNanos = Double.Parse(str[4]);
+                //TimeUncertaintyNanos = Double.Parse(str[1]);
+                FullBiasNanos = long.Parse(str[1]);
+                //BiasNanos = Double.Parse(str[2]);
+                Double.TryParse(str[2], out BiasUncertaintyNanos);
+                // BiasUncertaintyNanos = Double.Parse(str[3]);
                 GPStime = (TimeNanos + TimeUncertaintyNanos) - (FullBiasNanos - BiasNanos);
                 WeekNumberNanos = Math.Floor(-1 * FullBiasNanos * 1e-9 / WeekSec);
-                TrxNanos = TimeNanos - (FullBiasNanos - BiasNanos) - Convert.ToInt64(WeekNumberNanos);
+                TrxNanos = TimeNanos - (FullBiasNanos - Convert.ToInt64(BiasNanos)) - Convert.ToInt64(WeekNumberNanos);
             }
         }
         //  public List<Satellite> Satellites { get; set; }
@@ -66,19 +114,7 @@ namespace IpShareServer.Models
         public Vector3 CurrnetPos = new Vector3();
         public Measurement[] measurements;
         public Clock clock;
-
-        public WebSocket WebSocket;
-        public bool IsConnect = false;
-        private object _locker = new object();
-        public String state;
-        public Guid _guid;
         public String MessageString;
-        public User(WebSocket webSocket, Guid guid)
-        {
-            WebSocket = webSocket;
-            _guid = guid;
-        }
-
         public string LlaToECEF_String(double lat, double lon, double alt)
         {
             double DEGREES_TO_RADIANS = Math.PI / 180;
@@ -109,6 +145,8 @@ namespace IpShareServer.Models
                 }
                 var code = text.Split(":")[0];
                 var message = text.Split(":")[1].Split(" ");
+                stopWatch = Stopwatch.StartNew();
+                Logger.Write(text);
                 switch (code)
                 {
                     case "Measurements":
@@ -131,34 +169,36 @@ namespace IpShareServer.Models
                     case "Close":
                         break;
                 }
+                
             }
             await WebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed from server", CancellationToken.None);
         }
-
         public void ReceiveMeasurments(String[] message)
         {
-            Measurement measurment = new Measurement(message);
-            measurements[measurment.Svid] = measurment;
-            if (Program.MatLabUser != null)
+            // Measurement measurment = new Measurement(message);
+            // measurements[measurment.Svid] = measurment;
+            if (Program.MainMatlabUser != null)
             {
-                var MatLabUser = Program.MatLabUser;
-                SendMessage(MatLabUser.WebSocket, "Measurements" + " " + string.Join(" ", message));
+                var MatLabUser = Program.MainMatlabUser;
+                SendMessage(MatLabUser.WebSocket, "Measurements" + " " + _model + string.Join(" ", message));
             }
-            Console.Write("Meas: ");
+            //double st = stopWatch.ElapsedTicks;
+            Console.WriteLine("Meas: " + _model);
             foreach (String mess in message)
                 Console.Write(mess + " ");
             Console.WriteLine();
         }
         public void ReceiveGNSSClock(String[] message)
         {
-            measurements = new Measurement[32];
-            clock = new Clock(message);
-            if (Program.MatLabUser != null)
+            //   measurements = new Measurement[32];
+            //  clock = new Clock(message);
+            if (Program.MainMatlabUser != null)
             {
-                var MatLabUser = Program.MatLabUser;
-                SendMessage(MatLabUser.WebSocket, "GNSS Clock" + " " + string.Join(" ", message));
-            }
-            Console.Write("Clock: ");
+                var MainMatlabUser = Program.MainMatlabUser;
+                SendMessage(MainMatlabUser.WebSocket, "GNSS Clock:" + " " + _model + string.Join(" ", message));
+            }           
+           // double st = stopWatch.ElapsedTicks;
+            Console.WriteLine("Clock: " + _model);
             foreach (String mess in message)
                 Console.Write(mess + " ");
             Console.WriteLine();
@@ -166,22 +206,22 @@ namespace IpShareServer.Models
         public void ReceiveLocation(String[] message)
         {
 
-            if (Program.MatLabUser != null)
+            if (Program.MainMatlabUser != null)
             {
-                var MatLabUser = Program.MatLabUser;
-                SendMessage(MatLabUser.WebSocket, "Measurements" + " " + string.Join(" ", message));
+                var MainMatlabUser = Program.MainMatlabUser;
+                SendMessage(MainMatlabUser.WebSocket, "Location" + " " + _model + string.Join(" ", message));
             }
-            Console.Write("Location: ");
+            Console.Write("Location: " + _model);
             foreach (String mess in message)
                 Console.Write(mess + " ");
             Console.WriteLine();
         }
         public void returnEphemerides()
         {
-            if (Program.MatLabUser != null)
+            if (Program.MainMatlabUser != null)
             {
-                var MatLabUser = Program.MatLabUser;
-                SendMessage(MatLabUser.WebSocket, "Matlab" + " " + string.Join(" ", Program.Ephemerides));
+                var MainMatlabUser = Program.MainMatlabUser;
+                SendMessage(MainMatlabUser.WebSocket, "Ephemeris" + " " + string.Join(" ", Program.Ephemerides));
             }
         }
         private async void SendMessage(WebSocket socket, string message)

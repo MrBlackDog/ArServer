@@ -76,15 +76,17 @@ namespace IpShareServer
                         {
                             if (messageMass[1] == "Matlab")
                             {
-                                Program.MatLabUser = user;
+                                Program.MatlabUser.Add(user);
                                 Console.WriteLine($"New Connected MatlabUser {context.Connection.RemoteIpAddress} " + user._guid);
                             }
-                       /*     else if(messageMass[1] == "ESP8266")
+                            else if(messageMass[1] == "MainMatlabUser")
                             {
-                                
-                            }*/
+                                Program.MainMatlabUser = user;
+                                Console.WriteLine($"New Connected MainMatlabUser {context.Connection.RemoteIpAddress} " + user._guid);
+                            }
                             else
                             {
+                                user._model = messageMass[2];
                                 Program.Users.Add(user);
                                 Console.WriteLine($"New Connected Phone {context.Connection.RemoteIpAddress} " + user._guid +"  " + messageMass[2]);
                                //Console.WriteLine($"New Connected Phone {context.Connection.RemoteIpAddress} " + user._guid);
