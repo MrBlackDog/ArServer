@@ -13,8 +13,18 @@ namespace IpShareServer.Models
 {
     public class User
     {
-        public delegate bool CallBack(int hwnd, int lParam);
+        public User(WebSocket webSocket, Guid guid)
+        {
+            WebSocket = webSocket;
+            _guid = guid;
+        }
+        public WebSocket WebSocket;
+        public bool IsConnect = false;
+        private object _locker = new object();
+        public String state;
+        public Guid _guid;
 
+        public delegate bool CallBack(int hwnd, int lParam);
         public String CompliteMessageString(int hwnd, int lParam)
         {
             return (" ");
@@ -23,32 +33,28 @@ namespace IpShareServer.Models
         {
             public const double С = 2.99792458e8;
             public int Svid;
+            public long TimeOffsetNanos;
             public long ReceivedSvTimeNanos;
             public long ReceivedSvTimeUncertaintyNanos;
-            public long PseudoRange;
+
             public Measurement(String[] str)
             {
                 this.Svid = int.Parse(str[0]);
-                this.ReceivedSvTimeNanos = long.Parse(str[1]);
-                this.ReceivedSvTimeUncertaintyNanos = long.Parse(str[2]);
-
+                this.TimeOffsetNanos = long.Parse(str[1]);
+                this.ReceivedSvTimeNanos = long.Parse(str[2]);
+                this.ReceivedSvTimeUncertaintyNanos = long.Parse(str[3]);
             }
             public Measurement()
             { }
-
         }
 
         public class Clock
         {
-            public const int WeekSec = 604800;
             public long TimeNanos;
             public double TimeUncertaintyNanos;
             public long FullBiasNanos;
             public long BiasNanos;
             public double BiasUncertaintyNanos;
-            public double GPStime = 0;
-            public long TrxNanos = 0;
-            public double WeekNumberNanos;
             public Clock(String[] str)
             {
                 TimeNanos = long.Parse(str[0]);
@@ -56,48 +62,27 @@ namespace IpShareServer.Models
                 FullBiasNanos = long.Parse(str[2]);
                 BiasNanos = long.Parse(str[3]);
                 BiasUncertaintyNanos = Double.Parse(str[4]);
-                GPStime = (TimeNanos + TimeUncertaintyNanos) - (FullBiasNanos - BiasNanos);
-                WeekNumberNanos = Math.Floor(-1 * FullBiasNanos * 1e-9 / WeekSec);
-                TrxNanos = TimeNanos - (FullBiasNanos - BiasNanos) - Convert.ToInt64(WeekNumberNanos);
             }
+        }
+        public void CalculateMeassage()
+        {
+            int WeekSec = 604800;
+            double GPStime = 0;
+            long TrxNanos = 0;
+            double WeekNumberNanos;
+            long PseudoRange;
+
+            GPStime = (clock.TimeNanos + measurements[0].TimeOffsetNanos) - (clock.FullBiasNanos - clock.BiasNanos);
+            WeekNumberNanos = Math.Floor(-1 * clock.FullBiasNanos * 1e-9 / WeekSec);
+            TrxNanos = clock.TimeNanos - (clock.FullBiasNanos - clock.BiasNanos) - Convert.ToInt64(WeekNumberNanos);
         }
         //  public List<Satellite> Satellites { get; set; }
         //public GNSSClock GnssClock { get; set; }
         public Vector3 CurrnetPos = new Vector3();
         public Measurement[] measurements;
         public Clock clock;
-
-        public WebSocket WebSocket;
-        public bool IsConnect = false;
-        private object _locker = new object();
-        public String state;
-        public Guid _guid;
         public String MessageString;
-        public User(WebSocket webSocket, Guid guid)
-        {
-            WebSocket = webSocket;
-            _guid = guid;
-        }
 
-        public string LlaToECEF_String(double lat, double lon, double alt)
-        {
-            double DEGREES_TO_RADIANS = Math.PI / 180;
-            double clat = Math.Cos(lat * DEGREES_TO_RADIANS);
-            double slat = Math.Sin(lat * DEGREES_TO_RADIANS);
-            double clon = Math.Cos(lon * DEGREES_TO_RADIANS);
-            double slon = Math.Sin(lon * DEGREES_TO_RADIANS);
-
-            double WGS84_A = 6378137;
-            double WGS84_B = 6356752.314140;
-            double WGS84_E = Math.Sqrt(1 - (Math.Pow(WGS84_B, 2) / Math.Pow(WGS84_A, 2)));
-            double N = WGS84_A / Math.Sqrt(1.0 - WGS84_E * WGS84_E * slat * slat);
-
-            double x = (N + alt) * clat * clon;
-            double y = (N + alt) * clat * slon;
-            double z = (N * (1.0 - WGS84_E * WGS84_E) + alt) * slat;
-            MessageString = x.ToString() + " " + y.ToString() + " " + z.ToString();
-            return (x.ToString() + " " + y.ToString() + " " + z.ToString());
-        }
         public async Task Echo()
         {
             while (WebSocket.State == WebSocketState.Open)
@@ -134,11 +119,11 @@ namespace IpShareServer.Models
             }
             await WebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed from server", CancellationToken.None);
         }
-
         public void ReceiveMeasurments(String[] message)
         {
             Measurement measurment = new Measurement(message);
             measurements[measurment.Svid] = measurment;
+
             if (Program.MatLabUser != null)
             {
                 var MatLabUser = Program.MatLabUser;
@@ -165,7 +150,6 @@ namespace IpShareServer.Models
         }
         public void ReceiveLocation(String[] message)
         {
-
             if (Program.MatLabUser != null)
             {
                 var MatLabUser = Program.MatLabUser;
@@ -175,6 +159,25 @@ namespace IpShareServer.Models
             foreach (String mess in message)
                 Console.Write(mess + " ");
             Console.WriteLine();
+        }
+        public string LlaToECEF_String(double lat, double lon, double alt)
+        {
+            double DEGREES_TO_RADIANS = Math.PI / 180;
+            double clat = Math.Cos(lat * DEGREES_TO_RADIANS);
+            double slat = Math.Sin(lat * DEGREES_TO_RADIANS);
+            double clon = Math.Cos(lon * DEGREES_TO_RADIANS);
+            double slon = Math.Sin(lon * DEGREES_TO_RADIANS);
+
+            double WGS84_A = 6378137;
+            double WGS84_B = 6356752.314140;
+            double WGS84_E = Math.Sqrt(1 - (Math.Pow(WGS84_B, 2) / Math.Pow(WGS84_A, 2)));
+            double N = WGS84_A / Math.Sqrt(1.0 - WGS84_E * WGS84_E * slat * slat);
+
+            double x = (N + alt) * clat * clon;
+            double y = (N + alt) * clat * slon;
+            double z = (N * (1.0 - WGS84_E * WGS84_E) + alt) * slat;
+            MessageString = x.ToString() + " " + y.ToString() + " " + z.ToString();
+            return (x.ToString() + " " + y.ToString() + " " + z.ToString());
         }
         public void returnEphemerides()
         {
