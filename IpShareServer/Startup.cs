@@ -76,11 +76,13 @@ namespace IpShareServer
                         {
                             if (messageMass[1] == "Matlab")
                             {
+                                user._state = "Matlab";
                                 Program.MatlabUser.Add(user);
                                 Console.WriteLine($"New Connected MatlabUser {context.Connection.RemoteIpAddress} " + user._guid);
                             }
                             else if(messageMass[1] == "MainMatlabUser")
                             {
+                                user._state = "Matlab";
                                 Program.MainMatlabUser = user;
                                 Console.WriteLine($"New Connected MainMatlabUser {context.Connection.RemoteIpAddress} " + user._guid);
                             }
