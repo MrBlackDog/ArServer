@@ -19,13 +19,13 @@ namespace IpShareServer.Models
         private object _locker = new object();
         public string _model;
         public Guid _guid;
-        public String state;
-
-        public User(WebSocket webSocket, Guid guid,string model)
+        public string _state;
+        public User(WebSocket webSocket, Guid guid,string model,string state)
         {
             WebSocket = webSocket;
             _guid = guid;
             _model = model;
+            _state = state;
         }
         public User(WebSocket webSocket, Guid guid)
         {
@@ -36,7 +36,7 @@ namespace IpShareServer.Models
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _timer = new Timer(DoWork,null,TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(1000));
-            MessageString = "";
+           
             return Task.CompletedTask;
         }
         public Task StopAsync(CancellationToken cancellationToken)
@@ -47,17 +47,17 @@ namespace IpShareServer.Models
         { }
         private void DoWork(object state)
         {
-            //var MatLabUser = Program.MatLabUser.;
-            //SendMessage(MatLabUser.WebSocket, MessageString);
-            Console.WriteLine();
             Console.WriteLine("Sendind message to Server");
-            Console.WriteLine(); 
+            Console.WriteLine(MessageString);
+            var MainMatlabUser = Program.MainMatlabUser;
+            if (MessageString != null)
+            {
+                SendMessage(MainMatlabUser.WebSocket, MessageString);
+            }
+            MessageString = "";
         }
-
         Stopwatch stopWatch = new Stopwatch();
-
         public delegate bool CallBack(int hwnd, int lParam);
-
         public String CompliteMessageString(int hwnd, int lParam)
         {
             return (" ");
@@ -136,6 +136,10 @@ namespace IpShareServer.Models
         }
         public async Task Echo()
         {
+            if (_state != "Matlab")
+            {
+                _timer = new Timer(DoWork, null, TimeSpan.FromMilliseconds(100), TimeSpan.FromMilliseconds(1000));
+            }
             while (WebSocket.State == WebSocketState.Open)
             {
                 var text = WebSocketHelper.GetMessage(WebSocket).Result;
@@ -177,26 +181,33 @@ namespace IpShareServer.Models
         {
             // Measurement measurment = new Measurement(message);
             // measurements[measurment.Svid] = measurment;
-            if (Program.MainMatlabUser != null)
+        
+            /*  if (Program.MainMatlabUser != null)
             {
                 var MatLabUser = Program.MainMatlabUser;
                 SendMessage(MatLabUser.WebSocket, "Measurements" + " " + _model + string.Join(" ", message));
-            }
+            }*/
+
             //double st = stopWatch.ElapsedTicks;
             Console.WriteLine("Meas: " + _model);
             foreach (String mess in message)
+            {
                 Console.Write(mess + " ");
+                MessageString += mess + " ";
+            }
             Console.WriteLine();
         }
         public void ReceiveGNSSClock(String[] message)
         {
             //   measurements = new Measurement[32];
             //  clock = new Clock(message);
-            if (Program.MainMatlabUser != null)
+          
+            /*if (Program.MainMatlabUser != null)
             {
                 var MainMatlabUser = Program.MainMatlabUser;
                 SendMessage(MainMatlabUser.WebSocket, "GNSS Clock:" + " " + _model + string.Join(" ", message));
-            }           
+            }*/
+            
            // double st = stopWatch.ElapsedTicks;
             Console.WriteLine("Clock: " + _model);
             foreach (String mess in message)
@@ -206,11 +217,11 @@ namespace IpShareServer.Models
         public void ReceiveLocation(String[] message)
         {
 
-            if (Program.MainMatlabUser != null)
+            /*if (Program.MainMatlabUser != null)
             {
                 var MainMatlabUser = Program.MainMatlabUser;
                 SendMessage(MainMatlabUser.WebSocket, "Location" + " " + _model + string.Join(" ", message));
-            }
+            }*/
             Console.Write("Location: " + _model);
             foreach (String mess in message)
                 Console.Write(mess + " ");
