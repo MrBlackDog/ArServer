@@ -47,11 +47,11 @@ namespace IpShareServer.Models
         { }
         private void DoWork(object state)
         {
-            Console.WriteLine("Sendind message to Server");
-            Console.WriteLine(MessageString);
             var MainMatlabUser = Program.MainMatlabUser;
             if (MessageString != null)
             {
+                Console.WriteLine("Sendind message to Server");
+                Console.WriteLine(MessageString);
                 SendMessage(MainMatlabUser.WebSocket, MessageString);
             }
             MessageString = "";
@@ -172,8 +172,7 @@ namespace IpShareServer.Models
                         break;
                     case "Close":
                         break;
-                }
-                
+                }                
             }
             await WebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed from server", CancellationToken.None);
         }
@@ -200,23 +199,38 @@ namespace IpShareServer.Models
         public void ReceiveGNSSClock(String[] message)
         {
             //   measurements = new Measurement[32];
-            //  clock = new Clock(message);
-          
+            //  clock = new Clock(message);          
             /*if (Program.MainMatlabUser != null)
             {
                 var MainMatlabUser = Program.MainMatlabUser;
                 SendMessage(MainMatlabUser.WebSocket, "GNSS Clock:" + " " + _model + string.Join(" ", message));
             }*/
-            
-           // double st = stopWatch.ElapsedTicks;
+            // double st = stopWatch.ElapsedTicks;
+            CalculateGPSTime(message);
             Console.WriteLine("Clock: " + _model);
             foreach (String mess in message)
                 Console.Write(mess + " ");
             Console.WriteLine();
         }
+
+        private double CalculateGPSTime(string[] message)
+        {
+        const int WeekSec = 604800;
+        long TimeNanos =long.Parse(message[0]);
+        double TimeUncertaintyNanos;
+            long FullBiasNanos =long.Parse(message[1]);
+        double BiasNanos;
+        double BiasUncertaintyNanos;
+        double GPStime = 0;
+        long TrxNanos = 0;
+        double WeekNumberNanos;
+        //GPStime = (TimeNanos + TimeUncertaintyNanos) - (FullBiasNanos - BiasNanos);
+            MessageString += GPStime.ToString();
+            return GPStime;
+    }
+
         public void ReceiveLocation(String[] message)
         {
-
             /*if (Program.MainMatlabUser != null)
             {
                 var MainMatlabUser = Program.MainMatlabUser;
