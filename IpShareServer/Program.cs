@@ -19,6 +19,8 @@ namespace IpShareServer
         public static User MainMatlabUser;
         
         public static string Ephemerides;
+        public static string Ephemeris;
+        public static string FullMessageString;
         public static void Main(string[] args)
         {
             CreateWebHostBuilder(args).Build().Run();

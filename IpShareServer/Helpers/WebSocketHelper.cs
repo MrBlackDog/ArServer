@@ -18,5 +18,12 @@ namespace IpShareServer.Helpers
             text = text.Replace("\0", "");
             return text;
         }
+        public static async Task<WebSocketMessageType> GetMessageType(WebSocket webSocket)
+        {
+            var buffer = new byte[1024 * 4];
+            var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+            var messageType = result.MessageType;
+            return messageType;
+        }
     }
 }

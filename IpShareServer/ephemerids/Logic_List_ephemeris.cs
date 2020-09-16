@@ -75,12 +75,14 @@ namespace IpShareServer
             int number = 0;
             DateTime data = new DateTime();
             string infor = "";
+            string fullinfor = "";
             for (int j = 0; j < Str.Length; j++)
             {
                 //тут добавить расчет секунд.
                 var newStr = Str[j].Split(' ');
                 if (newStr.Length > 1)
                 {
+                    fullinfor += Str[j];
                     var nextStr = noSpace(newStr);
                     if (k < 1)
                     {
@@ -105,14 +107,16 @@ namespace IpShareServer
                     k++;
                     if (k == 8)
                     {
-                        var sput = new Sputnik(number, data, infor);
+                        var sput = new Sputnik(number, data, infor,fullinfor);
                         sputnik.Add(sput);
                         infor = "";
+                        fullinfor = "";
                         number = 0;
                         k = 0;
                     }
                 }
             }
+            //for(int e= 0; e<Str.Length;e +=8)
             return sputnik;
         }
         private static string[] formationArraystring(string[]Str,int count)
@@ -133,18 +137,18 @@ namespace IpShareServer
                     switch (groupBya.Count())
                     {
                         case 1:
-                            finish.Add(spSat.GetSputnik(item.number, item.data, item.ephemerisInfo));
+                            finish.Add(spSat.GetSputnik(item.number, item.data, item.ephemerisInfo,item.fullinfo));
                             break;
                         case 2:
                             if (i == 1)
                             {
-                                finish.Add(spSat.GetSputnik(item.number, item.data, item.ephemerisInfo));
+                                finish.Add(spSat.GetSputnik(item.number, item.data, item.ephemerisInfo, item.fullinfo));
                             }
                             break;
                         case 3:
                             if (i == 2)
                             {
-                                finish.Add(spSat.GetSputnik(item.number, item.data, item.ephemerisInfo));
+                                finish.Add(spSat.GetSputnik(item.number, item.data, item.ephemerisInfo, item.fullinfo));
             
                             }
                             break;

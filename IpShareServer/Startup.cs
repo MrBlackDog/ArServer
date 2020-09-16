@@ -20,6 +20,7 @@ namespace IpShareServer
 {
     public class Startup
     {
+
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -30,7 +31,7 @@ namespace IpShareServer
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-           
+
 
             services.Configure<CookiePolicyOptions>(options =>
             {
@@ -38,7 +39,8 @@ namespace IpShareServer
                 options.CheckConsentNeeded = context => true;
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
-            services.AddHostedService <GetEphemerides>();
+            services.AddHostedService<GetEphemerides>();
+            services.AddHostedService<UserHelper>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 
@@ -60,7 +62,7 @@ namespace IpShareServer
             app.UseCookiePolicy();
             app.UseWebSockets();
 
-          
+
             app.Use(async (context, next) =>
             {
                 if (context.Request.Path == "/ws")
@@ -70,43 +72,82 @@ namespace IpShareServer
                         WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
                         Console.WriteLine($"New Connection {context.Connection.RemoteIpAddress}");
                         var message = WebSocketHelper.GetMessage(webSocket).Result;
-                        var messageMass = message.Split(":");
-                        var user = new Models.User(webSocket,  Guid.NewGuid());
-                        if (messageMass[0] == "State")
+                        var connectionmessage = message.Split(":");
+                       
+                        switch (connectionmessage[0])
                         {
-                            if (messageMass[1] == "Matlab")
-                            {
-                                user._state = "Matlab";
-                                Program.MatlabUser.Add(user);
-                                Console.WriteLine($"New Connected MatlabUser {context.Connection.RemoteIpAddress} " + user._guid);
-                            }
-                            else if(messageMass[1] == "MainMatlabUser")
-                            {
-                                user._state = "Matlab";
-                                Program.MainMatlabUser = user;
-                                Console.WriteLine($"New Connected MainMatlabUser {context.Connection.RemoteIpAddress} " + user._guid);
-                            }
-                            else
-                            {
-                                user._model = messageMass[2];
-                                Program.Users.Add(user);
-                                Console.WriteLine($"New Connected Phone {context.Connection.RemoteIpAddress} " + user._guid +"  " + messageMass[2]);
-                               //Console.WriteLine($"New Connected Phone {context.Connection.RemoteIpAddress} " + user._guid);
-                            }
-                            await user.Echo();
+                            case "Matlab":
+                                {
+                                    var user = new Models.User(webSocket, Guid.NewGuid());
+                                    user._state = "Matlab";
+                                    Program.MatlabUser.Add(user);
+                                    Console.WriteLine($"New Connected MatlabUser {context.Connection.RemoteIpAddress} " + user._guid);
+                                    await user.Echo();
+                                    break;
+                                }
+                            case "Phone":
+                                {
+                                    switch (connectionmessage[2])
+                                    {
+                                        case "Relative":
+                                            {
+                                                var user = new Models.User(webSocket, connectionmessage[0], Guid.NewGuid(), connectionmessage[1], connectionmessage[2], connectionmessage[3]);
+                                                Console.WriteLine($"New Connected Phone if relative mode {context.Connection.RemoteIpAddress} " + connectionmessage[1] + " " + connectionmessage[3]);
+                                                Program.Users.Add(user);
+                                                await user.Echo();
+                                                break;
+                                            }
+                                        case "StandAlone":
+                                            {
+                                                var user = new Models.User(webSocket, connectionmessage[0], Guid.NewGuid(), connectionmessage[1], connectionmessage[2], connectionmessage[3]);
+                                                Program.Users.Add(user);
+                                                Console.WriteLine($"New Connected Phone if StandAlone mode {context.Connection.RemoteIpAddress} " + connectionmessage[1] + " " + connectionmessage[3]);
+
+                                                await user.Echo();
+                                                break;
+                                            }
+                                    }
+                                    break;
+                                }
+
                         }
-                        else
-                        {
-                            await user.Echo();
-                        }
+                        
+                        /*var user = new Models.User(webSocket,  Guid.NewGuid());
+                          if (messageMass[0] == "State")
+                          {
+                              if (messageMass[1] == "Matlab")
+                              {
+                                  user._state = "Matlab";
+                                  Program.MatlabUser.Add(user);
+                                  Console.WriteLine($"New Connected MatlabUser {context.Connection.RemoteIpAddress} " + user._guid);
+                              }
+                              else if(messageMass[1] == "MainMatlabUser")
+                              {
+                                  user._state = "Matlab";
+                                  Program.MainMatlabUser = user;
+                                  Console.WriteLine($"New Connected MainMatlabUser {context.Connection.RemoteIpAddress} " + user._guid);
+                              }
+                              else if(messageMass[1] == "Phone")
+                              {
+                                  user._model = messageMass[2];
+                                  Program.Users.Add(user);
+                                  Console.WriteLine($"New Connected Phone {context.Connection.RemoteIpAddress} " + user._guid +"  " + messageMass[2]);
+                                 //Console.WriteLine($"New Connected Phone {context.Connection.RemoteIpAddress} " + user._guid);
+                              }
+                              await user.Echo();
+                          }
+                          else
+                          {
+                              await user.Echo();
+                          }*/
                     }
 
                     else
                     {
                         context.Response.StatusCode = 400;
                     }
-                  
-                }                          
+
+                }
                 else
                 {
                     await next();

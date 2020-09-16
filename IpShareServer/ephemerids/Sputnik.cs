@@ -13,6 +13,7 @@ namespace IpShareServer
         public DateTime data;
         public string ephemerisInfo;
         public Ephemeris _ephemeris;
+        public string fullinfo;
         /// <summary>
         /// Координаты в ECEF
         /// </summary>
@@ -24,16 +25,29 @@ namespace IpShareServer
             this.number = number;
             this.data = data;
             this.ephemerisInfo = ephemerisInfo;
-            this._ephemeris = new Ephemeris(ephemerisInfo);
+            //this._ephemeris = new Ephemeris(ephemerisInfo);
             //CalculatePositionNew(_ephemeris.Toe + 60);
+        }
+        public Sputnik(int number, DateTime data, string ephemerisInfo,string info)
+        {
+            this.number = number;
+            this.data = data;
+            this.ephemerisInfo = ephemerisInfo;
+            this.fullinfo = info;
+            //this._ephemeris = new Ephemeris(ephemerisInfo);
+            //CalculatePositionNew(_ephemeris.Toe + 60);
+        }
+        public Sputnik(string ephemerisInfo)
+        {
+            this.ephemerisInfo = ephemerisInfo;
         }
         public Sputnik()
         {
 
         }
-        public Sputnik GetSputnik(int number, DateTime data, string efemeridInfo)
+        public Sputnik GetSputnik(int number, DateTime data, string efemeridInfo,string info)
         {
-            return new Sputnik(number, data, efemeridInfo);
+            return new Sputnik(number, data, efemeridInfo,info);
         }
         public void CalculatePosition(double t)
         {

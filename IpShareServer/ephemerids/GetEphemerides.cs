@@ -37,19 +37,23 @@ namespace IpShareServer
             System.Globalization.CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
             var BRDC_string = FtpManager.GetEpfemerids("ftp://ftp.glonass-iac.ru/MCC/BRDC/2019/");
             var endList = Logic_List_ephemeris.StartList(BRDC_string);//финальный лист
+           // Program.Ephemeris = Logic_List_ephemeris.MatlabEphemeris(BRDC_string);
             Program.Ephemerides = "";//финальная строка
 
             foreach (var item in endList)
             {
-                Program.Ephemerides = Program.Ephemerides + item.number.ToString() + " " + item.data.ToString() + " " + '\n'
-                    + item.ephemerisInfo + '\n';
+               // Program.Ephemerides = Program.Ephemerides + item.number.ToString() + " " + item.data.ToString() +  item.ephemerisInfo + '\n';
+                Program.Ephemerides += item.number + " " + item.data + " " + item.ephemerisInfo + '\n';
+                Program.Ephemeris += item.fullinfo + '\n';
             }
             Console.WriteLine(Program.Ephemerides);
-            foreach (Sputnik sputnik in endList)
+            Console.WriteLine("SDADASDASDASDAS");
+            Console.WriteLine(Program.Ephemeris);
+                /* foreach (Sputnik sputnik in endList)
             {
                 sputnik.CalculatePositionNew(sputnik._ephemeris.Toe + 60);
                 sputnik.CalculatePosition(sputnik._ephemeris.Toe + 60);
-            }
+            }*/
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
